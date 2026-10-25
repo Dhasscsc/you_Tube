@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>யூடியூப் சேனல் கண்காணிப்பு</title>
+<style>
+:root{--pri:#0d6efd;--dk:#1c222d;--br:#dfe3ea;--tx:#1d2330;--mut:#6b7280}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(#dce8f7,#eef3fa);min-height:100vh;color:var(--tx);font-family:"Noto Sans Tamil","Latha",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+h1{text-align:center;font-size:1.5rem;margin:8px 0 14px;color:#173a73}
+.card{background:#fff;border-radius:14px;box-shadow:0 2px 10px rgba(20,40,80,.08);margin-bottom:14px;overflow:hidden}
+.ch{background:var(--pri);color:#fff;padding:11px 16px;font-weight:700}
+.cb{padding:14px 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end}
+label{display:block;font-size:.88rem;margin-bottom:3px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--br);border-radius:8px;background:#fff;color:var(--tx);font:inherit}
+button{font:inherit;border:0;border-radius:8px;padding:9px 15px;cursor:pointer;color:#fff;background:var(--pri)}
+button:hover{filter:brightness(.92)}
+.b-g{background:#198754}.b-r{background:#dc3545}.b-y{background:#ffc107;color:#222}.b-k{background:#6c757d}.b-c{background:#0dcaf0;color:#112}
+.b-o{background:#fff;color:var(--pri);border:1px solid var(--pri)}
+button.sm{padding:4px 9px;font-size:.85rem}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px}
+.st{background:#fff;border-radius:12px;padding:12px;text-align:center;border-left:5px solid var(--pri);box-shadow:0 2px 10px rgba(20,40,80,.08)}
+.st b{display:block;font-size:1.9rem;line-height:1.2}
+.st:nth-child(2){border-color:#198754}.st:nth-child(3){border-color:#dc3545}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1 1 240px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{background:#fff;color:var(--tx);border:1px solid var(--br)}
+.tabs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.th{background:var(--dk);color:#fff;padding:11px 16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:760px}
+th{background:var(--dk);color:#fff;padding:10px 8px;text-align:center;font-size:.9rem}
+td{border-bottom:1px solid var(--br);padding:9px 8px;text-align:center;vertical-align:middle;font-size:.92rem}
+td.l{text-align:left}
+td a{color:var(--pri);word-break:break-all}
+td.act{white-space:nowrap}
+.dup{display:block;font-size:.75rem;color:#dc3545}
+.empty{text-align:center;color:var(--mut);padding:24px}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:14px;z-index:9}
+.ov.on{display:flex}
+.mb{background:#fff;border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.mh{background:var(--pri);color:#fff;padding:11px 16px;display:flex;justify-content:space-between;align-items:center}
+.ar{display:flex;gap:6px;align-items:center;justify-content:space-between;border:1px solid var(--br);border-radius:8px;padding:6px 10px;margin-bottom:6px}
+.sub{color:var(--mut);font-size:.85rem}
+.sync{display:inline-block;background:#fff;border:1px solid var(--br);border-radius:99px;padding:3px 14px;font-size:.85rem;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>யூடியூப் சேனல் கண்காணிப்பு</h1>
+<div style="text-align:center;margin:-6px 0 12px"><span class="sync" id="sync" onclick="pull(true)">☁ Sync அமை</span></div>
+
+<div class="card">
+ <div class="ch" id="formTitle">புதிய சேனல் / திருத்தம்</div>
+ <div class="cb">
+  <div class="grid">
+   <div><label>அக்கவுண்ட் பெயர் *</label><select id="acc"></select></div>
+   <div><label>சேனல் பெயர் *</label><input id="name"></div>
+   <div><label>சேனல் லிங்க்</label><input id="link" inputmode="url" placeholder="https://www.youtube.com/@..."></div>
+   <div><label>சேனல் விபரம்</label><input id="desc" placeholder="கூடுதல் விவரம்"></div>
+   <div style="display:flex;gap:8px"><button id="saveBtn" onclick="save()">சேமி / புதுப்பி</button><button class="b-k" onclick="resetForm()">Clear</button></div>
+  </div>
+ </div>
+</div>
+
+<div class="stats">
+ <div class="st">மொத்த சேனல்கள்<b id="s1">0</b></div>
+ <div class="st">அக்கவுண்ட்கள்<b id="s2">0</b></div>
+ <div class="st">பல அக்கவுண்டில் உள்ளவை<b id="s3">0</b></div>
+</div>
+
+<div class="bar">
+ <input id="q" placeholder="பெயர் / லிங்க் / விபரம் மூலம் தேடுக..." oninput="render()">
+ <button class="b-g" onclick="openM('pBulk','பட்டியலை ஒட்டி சேர்')">ஒட்டி சேர்</button>
+ <button class="b-k" onclick="exportJ()">JSON ஏற்றுமதி</button>
+ <button class="b-k" onclick="document.getElementById('imp').click()">இறக்குமதி</button>
+ <button class="b-o" onclick="openM('pSet','அக்கவுண்ட் அமைப்பு')">⚙ அமைப்பு</button>
+ <button class="b-r" onclick="delSel()">தேர்வு செய்தவை நீக்கு</button>
+ <input type="file" id="imp" accept=".json" style="display:none" onchange="importJ(event)">
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="card">
+ <div class="th"><b>சேனல்கள் பட்டியல்</b><span id="cnt"></span></div>
+ <div class="tw"><table>
+  <thead><tr><th><input type="checkbox" id="all" style="width:auto" onchange="togAll(this.checked)"></th><th>#</th><th>அக்கவுண்ட்</th><th>சேனல் பெயர்</th><th>லிங்க்</th><th>விபரம்</th><th>செயல்</th></tr></thead>
+  <tbody id="tb"></tbody>
+ </table></div>
+</div>
+</div>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeM()">
+ <div class="mb">
+  <div class="mh"><b id="mt"></b><button class="b-k sm" onclick="closeM()">✕</button></div>
+  <div class="cb">
+   <div id="pSet" style="display:none">
+    <label>☁ Google Apps Script URL (எல்லா கணினியிலும் தெரிய)</label>
+    <div class="grid" style="grid-template-columns:1fr auto;margin-bottom:14px">
+     <input id="gasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+     <button class="b-g" onclick="saveGas()">சேமி &amp; Sync</button>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr auto">
+     <div><label>புதிய அக்கவுண்ட் பெயர்</label><input id="newAcc" placeholder="எ.கா: Rathinam 3000 Subs" onkeydown="if(event.key==='Enter')addAcc()"></div>
+     <button onclick="addAcc()">சேர்</button>
+    </div>
+    <div id="accList" style="margin-top:12px"></div>
+   </div>
+   <div id="pBulk" style="display:none">
+    <label>அக்கவுண்ட் பெயர் *</label><select id="bAcc"></select>
+    <p class="sub">Google Doc / Sheet அட்டவணையை நகலெடுத்து ஒட்டவும். ஒவ்வொரு வரியிலும் பெயர், லிங்க், விபரம் இருக்க வேண்டும்.</p>
+    <textarea id="bulk" style="min-height:140px"></textarea>
+    <button class="b-g" style="margin-top:10px" onclick="bulkAdd()">சேர்</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<script>
+var accs=[],data=[],editId=null,tab="";
+function ld(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+var GAS_URL="https://script.google.com/macros/s/AKfycbxb85Eo9Mi0O-YG_hIAVsk_q84OSxK0Hc27Anu0s_zldOlKp0O_rPnC8Q6g2qWj9M4QKQ/exec";
+var gas=ld("yt_gas","")||GAS_URL,pushT=null,dirty=false;
+function persist(){sv("yt_accs",accs);sv("yt_data",data);schedulePush()}
+function setSync(t){$("sync").textContent=t}
+function tm(){return new Date().toLocaleTimeString("ta-IN")}
+function schedulePush(){if(!gas)return;dirty=true;clearTimeout(pushT);setSync("☁ சேமிக்கிறது...");pushT=setTimeout(push,1200)}
+function push(){if(!gas)return;
+ fetch(gas,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"save",accs:accs,data:data})})
+ .then(function(r){return r.json()}).then(function(j){if(j.ok){dirty=false;setSync("☁ சிங்க் ஆனது ("+tm()+")")}else setSync("⚠ சிங்க் தோல்வி")})
+ .catch(function(){setSync("⚠ இணையம் / URL சரிபார்க்கவும்")})}
+function pull(manual){
+ if(!gas){if(manual)openM("pSet","அக்கவுண்ட் அமைப்பு");return}
+ if(dirty){push();return}
+ setSync("☁ ஏற்றுகிறது...");
+ fetch(gas+(gas.indexOf("?")>-1?"&":"?")+"t="+Date.now()).then(function(r){return r.json()}).then(function(j){
+  if(!j.ok)throw new Error("x");
+  if(j.accs.length||j.data.length){accs=j.accs;data=j.data;sv("yt_accs",accs);sv("yt_data",data);drawAcc();render();setSync("☁ சிங்க் ஆனது ("+tm()+")")}
+  else if(accs.length||data.length){push()}
+  else setSync("☁ சிங்க் ஆனது ("+tm()+")")
+ }).catch(function(){setSync("⚠ இணையம் / URL சரிபார்க்கவும்")})}
+function saveGas(){gas=$("gasUrl").value.trim();sv("yt_gas",gas);if(gas){pull();closeM()}else setSync("☁ Sync அமை")}
+accs=ld("yt_accs",[]);data=ld("yt_data",[]);
+data.forEach(function(d){if(!d.acc&&d.accs){d.acc=d.accs[0]||""}});
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function norm(l){return(l||"").trim().toLowerCase().replace(/^https?:\/\/(www\.|m\.)?/,"").replace(/\/+$/,"")}
+function key(d){return d.link?norm(d.link):"n:"+d.name.toLowerCase()}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function openM(p,t){$("pSet").style.display=p==="pSet"?"block":"none";$("pBulk").style.display=p==="pBulk"?"block":"none";
+ $("mt").textContent=t;if(p==="pBulk")$("bAcc").value=$("acc").value;$("ov").className="ov on"}
+function closeM(){$("ov").className="ov"}
+function fillSel(id,first){var s=$(id),c=s.value;
+ s.innerHTML='<option value="">'+first+'</option>'+accs.map(function(a){return '<option value="'+esc(a)+'">'+esc(a)+'</option>'}).join("");s.value=c}
+function drawAcc(){
+ $("accList").innerHTML=accs.length?accs.map(function(a,i){
+  var n=data.filter(function(d){return d.acc===a}).length;
+  return '<div class="ar"><span>'+esc(a)+' <span class="sub">('+n+')</span></span><span><button class="b-y sm" onclick="renAcc('+i+')">திருத்து</button> <button class="b-r sm" onclick="delAcc('+i+')">நீக்கு</button></span></div>'
+ }).join(""):'<div class="sub">அக்கவுண்ட் எதுவும் இல்லை. மேலே பெயரைப் பதிவு செய்யவும்.</div>';
+ fillSel("acc","-- அக்கவுண்ட் தேர்வு --");fillSel("bAcc","-- அக்கவுண்ட் தேர்வு --");
+ if(tab&&accs.indexOf(tab)<0)tab="";
+ var t='<button class="'+(tab===""?"on":"")+'" onclick="setTab(-1)">எல்லாம் ('+data.length+')</button>';
+ accs.forEach(function(a,i){var n=data.filter(function(d){return d.acc===a}).length;
+  t+='<button class="'+(tab===a?"on":"")+'" onclick="setTab('+i+')">'+esc(a)+' ('+n+')</button>'});
+ $("tabs").innerHTML=t;
+}
+function setTab(i){tab=i<0?"":accs[i];drawAcc();render()}
+function addAcc(){var v=$("newAcc").value.trim();if(!v)return;
+ if(accs.indexOf(v)>-1){alert("இந்த அக்கவுண்ட் ஏற்கனவே உள்ளது");return}
+ accs.push(v);persist();$("newAcc").value="";drawAcc();render()}
+function renAcc(i){var o=accs[i],v=prompt("புதிய பெயர்",o);if(!v||!v.trim()||v.trim()===o)return;v=v.trim();
+ if(accs.indexOf(v)>-1){alert("இந்தப் பெயர் ஏற்கனவே உள்ளது");return}
+ accs[i]=v;data.forEach(function(d){if(d.acc===o)d.acc=v});if(tab===o)tab=v;persist();drawAcc();render()}
+function delAcc(i){var a=accs[i],n=data.filter(function(d){return d.acc===a}).length;
+ if(!confirm('"'+a+'" அக்கவுண்டையும் அதிலுள்ள '+n+' சேனல்களையும் நீக்கவா?'))return;
+ accs.splice(i,1);data=data.filter(function(d){return d.acc!==a});persist();drawAcc();render()}
+function save(){
+ var acc=$("acc").value,name=$("name").value.trim();
+ if(!acc){alert("அக்கவுண்ட் பெயரைத் தேர்வு செய்யவும். அமைப்பில் அக்கவுண்ட் சேர்க்கலாம்.");return}
+ if(!name){alert("சேனல் பெயர் உள்ளிடவும்");return}
+ var rec={id:editId||uid(),acc:acc,name:name,link:$("link").value.trim(),desc:$("desc").value.trim()};
+ if(editId){data=data.map(function(d){return d.id===editId?rec:d})}else{data.push(rec)}
+ persist();resetForm();$("acc").value=acc;drawAcc();$("acc").value=acc;render()}
+function resetForm(){editId=null;["name","link","desc"].forEach(function(i){$(i).value=""});$("formTitle").textContent="புதிய சேனல் / திருத்தம்"}
+function edit(id){var d=data.filter(function(x){return x.id===id})[0];if(!d)return;editId=id;
+ $("acc").value=d.acc;$("name").value=d.name;$("link").value=d.link;$("desc").value=d.desc;
+ $("formTitle").textContent="திருத்தம்: "+d.name;window.scrollTo({top:0,behavior:"smooth"})}
+function del(id){if(!confirm("நீக்கவா?"))return;data=data.filter(function(x){return x.id!==id});persist();drawAcc();render()}
+function togAll(c){document.querySelectorAll(".ck").forEach(function(e){e.checked=c})}
+function delSel(){var ids=[].slice.call(document.querySelectorAll(".ck:checked")).map(function(e){return e.getAttribute("data-id")});
+ if(!ids.length){alert("நீக்க வேண்டியவற்றைத் தேர்வு செய்யவும்");return}
+ if(!confirm(ids.length+" சேனல்களை நீக்கவா?"))return;
+ data=data.filter(function(d){return ids.indexOf(d.id)<0});persist();drawAcc();render()}
+function wa(id){var d=data.filter(function(x){return x.id===id})[0];if(!d)return;
+ var m="*"+d.name+"*\n"+(d.link?d.link+"\n":"")+(d.desc?d.desc+"\n":"")+"அக்கவுண்ட்: "+d.acc;
+ window.open("https://wa.me/?text="+encodeURIComponent(m),"_blank")}
+function bulkAdd(){
+ var acc=$("bAcc").value;if(!acc){alert("அக்கவுண்ட் பெயரைத் தேர்வு செய்யவும்");return}
+ var add=0;
+ $("bulk").value.split(/\r?\n/).forEach(function(l){l=l.trim();if(!l)return;if(/youtube\s*name/i.test(l)&&/link/i.test(l))return;
+  var name,link,desc="",p=l.split("\t");
+  if(p.length>=2){name=p[0].trim();link=p[1].trim();desc=p.slice(2).join(" ").trim()}
+  else{var m=l.match(/https?:\/\/\S+/);if(!m)return;link=m[0];name=l.slice(0,m.index).trim();desc=l.slice(m.index+link.length).trim()}
+  if(!name)return;
+  if(data.some(function(d){return d.acc===acc&&link&&norm(d.link)===norm(link)}))return;
+  data.push({id:uid(),acc:acc,name:name,link:link,desc:desc});add++});
+ persist();$("bulk").value="";drawAcc();render();closeM();alert(add+" சேனல்கள் சேர்க்கப்பட்டன")}
+function render(){
+ var q=$("q").value.trim().toLowerCase();
+ var by={};data.forEach(function(d){var k=key(d);(by[k]=by[k]||[]).push(d)});
+ var multi=0;Object.keys(by).forEach(function(k){var s={};by[k].forEach(function(d){s[d.acc]=1});if(Object.keys(s).length>1)multi++});
+ $("s1").textContent=data.length;$("s2").textContent=accs.length;$("s3").textContent=multi;
+ var L=data.filter(function(d){return(!tab||d.acc===tab)&&(!q||(d.name+" "+d.link+" "+d.desc+" "+d.acc).toLowerCase().indexOf(q)>-1)});
+ $("cnt").textContent=L.length+" பதிவுகள்";$("all").checked=false;
+ $("tb").innerHTML=L.length?L.map(function(d,i){
+  var o=(by[key(d)]||[]).filter(function(x){return x.id!==d.id&&x.acc!==d.acc}).map(function(x){return x.acc});
+  o=o.filter(function(v,j){return o.indexOf(v)===j});
+  return '<tr><td><input type="checkbox" class="ck" style="width:auto" data-id="'+d.id+'"></td><td>'+(i+1)+'</td><td>'+esc(d.acc)+'</td>'+
+  '<td class="l"><b>'+esc(d.name)+'</b>'+(o.length?'<span class="dup">இதிலும் உள்ளது: '+esc(o.join(", "))+'</span>':'')+'</td>'+
+  '<td class="l">'+(d.link?'<a href="'+esc(d.link)+'" target="_blank" rel="noopener">'+esc(d.link)+'</a>':'')+'</td><td class="l">'+esc(d.desc)+'</td>'+
+  '<td class="act"><button class="b-y sm" title="திருத்து" onclick="edit(\''+d.id+'\')">✏️</button> <button class="b-g sm" title="வாட்சப்" onclick="wa(\''+d.id+'\')">💬</button> <button class="b-r sm" title="நீக்கு" onclick="del(\''+d.id+'\')">🗑️</button></td></tr>'
+ }).join(""):'<tr><td colspan="7" class="empty">பதிவுகள் எதுவும் இல்லை</td></tr>';
+}
+function exportJ(){var b=new Blob([JSON.stringify({accs:accs,data:data})],{type:"application/json"});
+ var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="yt_channels.json";a.click()}
+function importJ(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();
+ r.onload=function(){try{var j=JSON.parse(r.result);if(j.accs&&j.data){accs=j.accs;data=j.data;
+  data.forEach(function(d){if(!d.acc&&d.accs)d.acc=d.accs[0]||""});persist();resetForm();drawAcc();render()}else alert("தவறான கோப்பு")}catch(x){alert("தவறான கோப்பு")}};r.readAsText(f)}
+drawAcc();render();
+$("gasUrl").value=gas;if(gas)pull();
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&gas&&!dirty)pull()});
+</script>
+</body>
+</html>
